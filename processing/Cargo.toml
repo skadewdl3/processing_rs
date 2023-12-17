@@ -6,11 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["staticlib", "rlib"]
 
 [dependencies]
 env_logger = "0.10.1"
 image = "0.24.7"
+lazy_static = "1.4.0"
 pollster = "0.3.0"
 wgpu = "0.18.0"
 winit = "0.28"
+
+[build-dependencies]
+cbindgen = "0.26.0"

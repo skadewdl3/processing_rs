@@ -2,14 +2,16 @@ use wgpu::{ShaderModule, RenderPipeline, Device, PipelineLayoutDescriptor, Pipel
 
 pub struct Shader {
 	pub module: ShaderModule,
-	pub pipeline: RenderPipeline
+	pub pipeline: RenderPipeline,
+	pub vertex_count: u32
 }
 
 pub struct ShaderBuilder<'a> {
 	label:Option<&'a str>,
 	source: Option<&'a str>,
 	pipeline_layout: Option<PipelineLayout>,
-	device: &'a Device
+	device: &'a Device,
+	vertex_count: Option<u32>
 }
 
 impl<'a> ShaderBuilder<'a> {
@@ -18,6 +20,7 @@ impl<'a> ShaderBuilder<'a> {
 			label: None,
 			source: None,
 			pipeline_layout: None,
+			vertex_count: None,
 			device
 		}
 	}
@@ -35,6 +38,11 @@ impl<'a> ShaderBuilder<'a> {
 	pub fn with_pipeline_layout (&mut self, layout: PipelineLayoutDescriptor<'_>) -> &mut Self {
 		let x = self.device.create_pipeline_layout(&layout);
 		self.pipeline_layout = Some(x);
+		self
+	}
+
+	pub fn with_vertex_count (&mut self, count: u32) -> &mut Self {
+		self.vertex_count = Some(count);
 		self
 	}
 
@@ -82,7 +90,8 @@ impl<'a> ShaderBuilder<'a> {
 
 		Shader {
 			module: shader,
-			pipeline
+			pipeline,
+			vertex_count: self.vertex_count.expect("No vertex count specified")
 		}
 	}
 }

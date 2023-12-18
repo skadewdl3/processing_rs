@@ -1,14 +1,14 @@
-use crate::{state::{set_state, get_state, State, self, STATE, Bruh}, shader::ShaderBuilder};
+use crate::{
+    state::{set_state, get_state},
+    shader::ShaderBuilder, shapes::triangle::TriangleUniforms
+};
+
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoopBuilder},
     window::WindowBuilder
 };
 
-/*
-draw - maybe adds a shader depending on the function called
-setup - creates a window. may add shaders or not like draw.
-*/
 
 pub type Callback = extern "C" fn() -> ();
 
@@ -104,18 +104,28 @@ async fn run () {
     let shader = ShaderBuilder::new(&get_state().device.as_ref().unwrap())
         .with_label("triangle shader")
         .with_vertex_count(3)
-        .with_source("processing/src/shader.wgsl")
+        .with_source("processing/src/shaders/triangle.wgsl")
+        .with_uniforms(crate::shader::Uniforms::Triangle(
+            TriangleUniforms {
+                x1: -0.5,
+                y1: 0.0,
+                x2: 0.5,
+                y2: 0.0,
+                x3: 0.0,
+                y3: 0.5,
+            }
+        ))
         .build();
 
-    let shader2 = ShaderBuilder::new(&get_state().device.as_ref().unwrap())
-        .with_label("triangle shader")
-        .with_vertex_count(3)
-        .with_source("processing/src/shader2.wgsl")
-        .build();
+    // let shader2 = ShaderBuilder::new(&get_state().device.as_ref().unwrap())
+    //     .with_label("triangle shader")
+    //     .with_vertex_count(3)
+    //     .with_source("processing/src/shaders/shader2.wgsl")
+    //     .build();
 
     set_state! {
         shaders.push(shader);
-        shaders.push(shader2);
+        // shaders.push(shader2);
     }
 
     let state = get_state();
@@ -123,7 +133,6 @@ async fn run () {
     event_loop.run(move |event, _, control_flow| {    
 
         
-        // call draw before further steps, as it requirs write lock
         let draw = state.draw.expect("No draw function specified");
         draw();
 
@@ -165,9 +174,13 @@ async fn run () {
                         depth_stencil_attachment: None,
                         ..Default::default()
                     });
+
+                    
                 
                     for shader in state.shaders.iter() {
                         rpass.set_pipeline(&shader.pipeline);
+                        // if let Some(x) = shader.
+                        rpass.set_bind_group(0, &shader.bind_group, &[]);
                         rpass.draw(0..shader.vertex_count, 0..1);
                     }
 

@@ -12,3 +12,7 @@ void create_window(uint32_t width, uint32_t height);
 void p_run(void);
 
 void rect(void);
+
+void point(void);
+
+void triangle(void);

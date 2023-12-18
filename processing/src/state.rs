@@ -1,4 +1,4 @@
-use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{RwLock, RwLockReadGuard};
 use lazy_static::lazy_static;
 use crate::{
     core::Callback,
@@ -31,8 +31,6 @@ impl State {
         self.shaders.push(shader);
     }
 }
-
-// pub struct ShaderState 
 
 lazy_static! {
     pub static ref STATE: RwLock<State> = RwLock::new(State::default());
@@ -80,5 +78,6 @@ macro_rules! set_state {
         set_state!{ $($var3$(.$var4)*($value2);)* };
     };  
 }
+
 
 pub(crate) use set_state;

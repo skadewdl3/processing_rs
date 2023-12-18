@@ -1,6 +1,7 @@
 use crate::{
     state::{set_state, get_state},
-    shader::ShaderBuilder, shapes::triangle::TriangleUniforms
+    shader::{ShaderBuilder, Vertex},
+    shapes::triangle::TriangleUniforms
 };
 
 use winit::{
@@ -103,29 +104,18 @@ async fn run () {
 
     let shader = ShaderBuilder::new(&get_state().device.as_ref().unwrap())
         .with_label("triangle shader")
-        .with_vertex_count(3)
         .with_source("processing/src/shaders/triangle.wgsl")
-        .with_uniforms(crate::shader::Uniforms::Triangle(
-            TriangleUniforms {
-                x1: -0.5,
-                y1: 0.0,
-                x2: 0.5,
-                y2: 0.0,
-                x3: 0.0,
-                y3: 0.5,
-            }
-        ))
+        .with_vertex_buffer(vec![
+            Vertex { position: [-0.5, -0.5, 0.0], color: [1.0, 0.0, 0.0, 1.0] },
+            Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0, 1.0] },
+            Vertex { position: [0.5, 0.5, 0.0], color: [0.0, 0.0, 1.0, 1.0] },
+            Vertex { position: [-0.5, 0.5, 0.0], color: [1.0, 0.0, 1.0, 1.0] },
+        ])
+        .with_index_bufer(vec![0, 1, 3, 3, 1, 2])
         .build();
-
-    // let shader2 = ShaderBuilder::new(&get_state().device.as_ref().unwrap())
-    //     .with_label("triangle shader")
-    //     .with_vertex_count(3)
-    //     .with_source("processing/src/shaders/shader2.wgsl")
-    //     .build();
 
     set_state! {
         shaders.push(shader);
-        // shaders.push(shader2);
     }
 
     let state = get_state();
@@ -180,8 +170,22 @@ async fn run () {
                     for shader in state.shaders.iter() {
                         rpass.set_pipeline(&shader.pipeline);
                         // if let Some(x) = shader.
-                        rpass.set_bind_group(0, &shader.bind_group, &[]);
-                        rpass.draw(0..shader.vertex_count, 0..1);
+                        if shader.has_uniforms { rpass.set_bind_group(0, &shader.bind_group.as_ref().unwrap(), &[]) }
+
+                        if let Some(vertex_buffer) = shader.vertex_buffer.as_ref() {
+                            rpass.set_vertex_buffer(0, vertex_buffer.slice(..));
+                        }
+
+                        if let Some(index_buffer) = shader.index_buffer.as_ref() {
+                            rpass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+                        }
+
+                        if shader.has_index_buffer {
+                            println!("this ran");
+                            rpass.draw_indexed(0..shader.index_count.unwrap(), 0, 0..1);
+                        }
+                        else { rpass.draw(0..shader.vertex_count, 0..1) }
+                        
                     }
 
                 }

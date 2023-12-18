@@ -1,14 +1,21 @@
 use wgpu::{ShaderModule, RenderPipeline, Device, PipelineLayoutDescriptor, PipelineLayout, util::DeviceExt};
-use crate::{shapes::{
+use crate::shapes::{
 	rect::RectUniforms,
-	point::{PointUniforms, self},
+	point::PointUniforms,
 	triangle::TriangleUniforms
-}, state::get_state};
+};
 
 pub enum Uniforms {
     Rect(RectUniforms),
 	Point(PointUniforms),
 	Triangle(TriangleUniforms)
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct Vertex {
+	pub position: [f32; 3],
+	pub color: [f32; 4],
 }
 
 impl Uniforms {
@@ -25,7 +32,15 @@ pub struct Shader {
 	pub module: ShaderModule,
 	pub pipeline: RenderPipeline,
 	pub vertex_count: u32,
-	pub bind_group: wgpu::BindGroup
+	pub bind_group: Option<wgpu::BindGroup>,
+	pub vertex_buffer: Option<wgpu::Buffer>,
+	pub index_buffer: Option<wgpu::Buffer>,
+	pub index_count: Option<u32>,
+
+
+	pub has_index_buffer: bool,
+	pub has_vertex_buffer: bool,
+	pub has_uniforms: bool
 }
 
 pub struct ShaderBuilder<'a> {
@@ -33,10 +48,13 @@ pub struct ShaderBuilder<'a> {
 	source: Option<&'a str>,
 	pipeline_layout: Option<PipelineLayout>,
 	device: &'a Device,
-	vertex_count: Option<u32>,
 	uniforms: Option<Uniforms>,
 	bind_group: Option<wgpu::BindGroup>,
-	bind_group_layout: Option<wgpu::BindGroupLayout>
+	bind_group_layout: Option<wgpu::BindGroupLayout>,
+	vertex_buffer: Option<wgpu::Buffer>,
+	vertex_count: Option<u32>,
+	index_buffer: Option<wgpu::Buffer>,
+	index_count: Option<u32>
 }
 
 impl<'a> ShaderBuilder<'a> {
@@ -49,7 +67,10 @@ impl<'a> ShaderBuilder<'a> {
 			device,
 			uniforms: None,
 			bind_group: None,
-			bind_group_layout: None
+			bind_group_layout: None,
+			vertex_buffer: None,
+			index_buffer: None,
+			index_count: None
 		}
 	}
 
@@ -60,12 +81,6 @@ impl<'a> ShaderBuilder<'a> {
 
 	pub fn with_source (&mut self, source: &'a str) -> &mut Self {
 		self.source = Some(source);
-		self
-	}
-
-	pub fn with_pipeline_layout (&mut self, layout: PipelineLayoutDescriptor<'_>) -> &mut Self {
-		let x = self.device.create_pipeline_layout(&layout);
-		self.pipeline_layout = Some(x);
 		self
 	}
 
@@ -123,14 +138,42 @@ impl<'a> ShaderBuilder<'a> {
 
 	// TODO: Add render pipeline options later
 
+	pub fn with_vertex_buffer (&mut self, vertices: Vec<Vertex>) -> &mut Self {
+		let vertex_buffer = self.device.create_buffer_init(
+			&wgpu::util::BufferInitDescriptor {
+				label: Some("Vertex Buffer"),
+				contents: bytemuck::cast_slice(&vertices),
+				usage: wgpu::BufferUsages::VERTEX,
+			}
+		);
+
+		self.vertex_buffer = Some(vertex_buffer);
+		self.vertex_count = Some(vertices.len() as u32);
+		self
+	}
+
+	pub fn with_index_bufer (&mut self, indices: Vec<u16>) -> &mut Self {
+		let index_buffer = self.device.create_buffer_init(
+			&wgpu::util::BufferInitDescriptor {
+				label: Some("Index Buffer"),
+				contents: bytemuck::cast_slice(&indices),
+				usage: wgpu::BufferUsages::INDEX,
+			}
+		);
+
+		self.index_buffer = Some(index_buffer);
+		self.index_count = Some(indices.len() as u32);
+		self
+	}
+
 	pub fn build (&mut self) -> Shader {
 		let shader_string = std::fs::read_to_string(self.source.expect("No file path specified"))
 			.expect("Could not read shader file");
-
 		let shader = self.device.create_shader_module(wgpu::ShaderModuleDescriptor {
 			label: self.label,
 			source: wgpu::ShaderSource::Wgsl(shader_string.as_str().into()),
 		});
+
 
 		let pipeline_layout: Option<PipelineLayout> = match self.bind_group.as_ref() {
 			Some(_) => {
@@ -144,9 +187,21 @@ impl<'a> ShaderBuilder<'a> {
 			}
 			None => None
 		};
-
 		self.pipeline_layout = pipeline_layout;
 
+		
+		
+		let mut buffers: Vec<wgpu::VertexBufferLayout> = vec![];
+		let attributes = &wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x4];
+		if self.vertex_buffer.is_some() {
+			let x = wgpu::VertexBufferLayout {
+				array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+				step_mode: wgpu::VertexStepMode::Vertex,
+				attributes
+			};
+			buffers.push(x);
+		}
+		
 
 		let pipeline = self.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
 			label: self.label,
@@ -155,8 +210,9 @@ impl<'a> ShaderBuilder<'a> {
 			vertex: wgpu::VertexState {
 				module: &shader,
 				entry_point: "vs_main",
-				buffers: &[],
+				buffers: &buffers,
 			},
+
 			fragment: Some(wgpu::FragmentState {
 				module: &shader,
 				entry_point: "fs_main",
@@ -178,8 +234,18 @@ impl<'a> ShaderBuilder<'a> {
 		Shader {
 			module: shader,
 			pipeline,
-			bind_group: self.bind_group.take().expect("No bind group specified"),
-			vertex_count: self.vertex_count.expect("No vertex count specified")
+			bind_group: self.bind_group.take(),
+			vertex_count: self.vertex_count.take().expect("No vertex count specified"),
+			
+			//  determine whether buffer exists before taking them
+			has_index_buffer: self.index_buffer.is_some(),
+			has_vertex_buffer: self.vertex_buffer.is_some(),
+			has_uniforms: self.uniforms.is_some(),
+
+			// take buffers
+			vertex_buffer: self.vertex_buffer.take(),
+			index_count: self.index_count.take(),
+			index_buffer: self.index_buffer.take(),
 		}
 	}
 }

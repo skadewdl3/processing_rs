@@ -1,4 +1,4 @@
-use wgpu::{ShaderModule, RenderPipeline, Device, PipelineLayoutDescriptor, PipelineLayout, util::DeviceExt};
+use wgpu::{ShaderModule, RenderPipeline, Device, PipelineLayout, util::DeviceExt};
 use crate::shapes::{
 	rect::RectUniforms,
 	point::PointUniforms,
@@ -12,11 +12,35 @@ pub enum Uniforms {
 }
 
 #[repr(C)]
-#[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Debug, Default, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
 	pub position: [f32; 3],
 	pub color: [f32; 4],
 }
+
+impl Vertex {
+	pub fn new () -> Self {
+		return Self::default();
+	}
+	
+	pub fn with_position (self, x: f32, y: f32, z: f32) -> Self {
+		Self {
+			position: [x, y, z],
+			..self
+		}
+	}
+
+	pub fn with_color (self, r: f32, g: f32, b: f32, a: f32) -> Self {
+		Self {
+			color: [r, g, b, a],
+			..self
+		}
+	}
+	
+}
+
+
+
 
 impl Uniforms {
 	fn get_contents(&self) -> Vec<u8> {
@@ -136,8 +160,6 @@ impl<'a> ShaderBuilder<'a> {
 		self
 	}
 
-	// TODO: Add render pipeline options later
-
 	pub fn with_vertex_buffer (&mut self, vertices: Vec<Vertex>) -> &mut Self {
 		let vertex_buffer = self.device.create_buffer_init(
 			&wgpu::util::BufferInitDescriptor {
@@ -152,7 +174,7 @@ impl<'a> ShaderBuilder<'a> {
 		self
 	}
 
-	pub fn with_index_bufer (&mut self, indices: Vec<u16>) -> &mut Self {
+	pub fn with_index_buffer (&mut self, indices: Vec<u16>) -> &mut Self {
 		let index_buffer = self.device.create_buffer_init(
 			&wgpu::util::BufferInitDescriptor {
 				label: Some("Index Buffer"),

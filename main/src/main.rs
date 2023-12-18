@@ -5,6 +5,7 @@ extern "C" fn setup () {
 }
 
 extern "C" fn draw () {
+    shapes::rect::rect(400.0, 400.0, 100.0, 50.0);
 }
 
 fn main() {

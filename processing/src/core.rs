@@ -1,8 +1,4 @@
-use crate::{
-    state::{set_state, get_state},
-    shader::{ShaderBuilder, Vertex},
-    shapes::triangle::TriangleUniforms
-};
+use crate::{state::{set_state, get_state}, shapes::rect::rect};
 
 use winit::{
     event::{Event, WindowEvent},
@@ -42,7 +38,7 @@ async fn run () {
     let state = get_state();
     let width = state.width.expect("No width specified");
     let height = state.height.expect("No height specified");
-    std::mem::drop(state);
+    drop(state);
 
     let event_loop = EventLoopBuilder::new().build();
 
@@ -102,30 +98,18 @@ async fn run () {
         surface = Some(surface);
     };
 
-    let shader = ShaderBuilder::new(&get_state().device.as_ref().unwrap())
-        .with_label("triangle shader")
-        .with_source("processing/src/shaders/triangle.wgsl")
-        .with_vertex_buffer(vec![
-            Vertex { position: [-0.5, -0.5, 0.0], color: [1.0, 0.0, 0.0, 1.0] },
-            Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0, 1.0] },
-            Vertex { position: [0.5, 0.5, 0.0], color: [0.0, 0.0, 1.0, 1.0] },
-            Vertex { position: [-0.5, 0.5, 0.0], color: [1.0, 0.0, 1.0, 1.0] },
-        ])
-        .with_index_bufer(vec![0, 1, 3, 3, 1, 2])
-        .build();
-
-    set_state! {
-        shaders.push(shader);
-    }
-
-    let state = get_state();
-
     event_loop.run(move |event, _, control_flow| {    
 
-        
-        let draw = state.draw.expect("No draw function specified");
+
+        set_state! {
+            shaders = vec![];
+        }
+
+
+        let draw = get_state().draw.expect("No draw function specified");
         draw();
 
+        let state = get_state();
         let device = state.device.as_ref().expect("No device specified");
         let queue = state.queue.as_ref().expect("No queue specified");
         let surface = state.surface.as_ref().expect("No surface specified");

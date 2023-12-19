@@ -15,7 +15,6 @@ pub enum Uniforms {
 #[derive(Debug, Default, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
 	pub position: [f32; 3],
-	pub color: [f32; 4],
 }
 
 // macro to convert vertex position to -1 to 1 coordinates
@@ -24,14 +23,23 @@ pub struct Vertex {
 // convert world space to normalized device coordinates
 
 macro_rules! normalized_vtx {
-    (position: $pos:expr, color: $col:expr) => {
+    ($x:expr, $y:expr) => {
         crate::core::shader::Vertex {
             position: [
-                $pos[0] / crate::core::state::get_state().width.expect("Width of window has not been set") as f32 * 2.0 - 1.0,
-                -($pos[1] / crate::core::state::get_state().height.expect("Height of window has not been set") as f32 * 2.0 - 1.0),
+                $x / crate::core::state::get_state().width.expect("Width of window has not been set") as f32 * 2.0 - 1.0,
+                -($y / crate::core::state::get_state().height.expect("Height of window has not been set") as f32 * 2.0 - 1.0),
                 0.0
             ],
-            color: $col
+        }
+    };
+
+	($x:expr, $y:expr, $z:expr) => {
+        crate::core::shader::Vertex {
+            position: [
+                $x / crate::core::state::get_state().width.expect("Width of window has not been set") as f32 * 2.0 - 1.0,
+                -($y / crate::core::state::get_state().height.expect("Height of window has not been set") as f32 * 2.0 - 1.0),
+                $z
+            ],
         }
     };
 }

@@ -83,6 +83,8 @@ double mouseY(void);
 
 void rect(float x, float y, float width, float height);
 
+void square(float x, float y, float side);
+
 void point(void);
 
 void triangle(void);

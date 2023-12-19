@@ -1,7 +1,7 @@
 use processing::{*, core::{color, event::PEventData}};
 
 extern "C" fn mouse_pressed_handler (data: PEventData) {
-    println!("Mouse pressed: {:?}, {:?}", data.mouse_x, data.mouse_y);
+    println!("Mouse button: {:?}", data.mouse_button);
 }
 
 extern "C" fn setup () {

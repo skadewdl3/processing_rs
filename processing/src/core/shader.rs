@@ -28,7 +28,7 @@ macro_rules! normalized_vtx {
         crate::core::shader::Vertex {
             position: [
                 $pos[0] / crate::core::state::get_state().width.expect("Width of window has not been set") as f32 * 2.0 - 1.0,
-                $pos[1] / crate::core::state::get_state().height.expect("Height of window has not been set") as f32 * 2.0 - 1.0,
+                -($pos[1] / crate::core::state::get_state().height.expect("Height of window has not been set") as f32 * 2.0 - 1.0),
                 0.0
             ],
             color: $col

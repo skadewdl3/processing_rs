@@ -1,5 +1,6 @@
 pub mod core;
 pub mod shapes;
+pub mod math;
 
 // extern "C" fn setup () {
 //     core::create_window(800, 800);

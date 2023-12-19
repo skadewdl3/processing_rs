@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include "bindings.h"
 
-int x = 400;
-int inc = 10;
+double mouse_x = 0;
+double mouse_y = 0;
+
 
 void setup () {
     create_window(1600, 800);
@@ -11,11 +12,9 @@ void setup () {
 }
 
 void draw () {
-    rect(x, 400, 100, 50);
-    if (x < 0 || x + 100 >= width()) {
-        inc *= -1;
-    }
-    x += inc;
+    mouse_x = mouseX();
+    mouse_y = mouseY();
+    rect(mouse_x - 50, mouse_y - 50, 100, 100);
 }
 
 int main() {

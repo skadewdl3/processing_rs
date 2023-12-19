@@ -6,9 +6,9 @@ use crate::core::{
 };
 
 use winit::{
-    event::{Event, WindowEvent},
+    event::{Event, WindowEvent, ElementState},
     event_loop::{ControlFlow, EventLoopBuilder},
-    window::WindowBuilder, monitor::MonitorHandle
+    window::WindowBuilder, monitor::MonitorHandle,
 };
 
 #[no_mangle]
@@ -230,26 +230,45 @@ pub async fn start_event_loop () {
 
 
             Event::WindowEvent { event, .. } => {
-                match event {
-                    WindowEvent::MouseInput { button, .. } => {
 
-                        let state = get_state();
-                        if let Some(handler) = state.events.get(&PEvent::PMousePressed) {
-                            let data = PEventData {
-                                event_type: PEvent::PMousePressed,
-                                mouse_x: state.mouse_x as f32,
-                                mouse_y: state.mouse_y as f32,
-                                mouse_button: PMouseButton::from(button),
-                            };
-                            handler(data)
+                match event {
+                    // handle mouse pressed and mouse released events
+                    WindowEvent::MouseInput { state: mouse_state, button, .. } => {
+
+                        match mouse_state {
+                            ElementState::Released => {
+                                if let Some(handler) = get_state().events.get(&PEvent::PMouseReleased) {
+                                    handler(PEventData::from_mouse_event(
+                                        PEvent::PMouseReleased,
+                                        PMouseButton::from(button)
+                                    ));
+                                }
+                            }
+
+                            ElementState::Pressed => {
+                                if let Some(handler) = get_state().events.get(&PEvent::PMousePressed) {
+                                    handler(PEventData::from_mouse_event(
+                                        PEvent::PMousePressed,
+                                        PMouseButton::from(button)
+                                    ));
+                                }
+                            }
                         }
                     }
 
+                    // handle mouse move event
                     WindowEvent::CursorMoved { position, .. } => {
-                        println!("Mouse moved: {:?}, {:?}", position.x, position.y);
                         set_state! {
                             mouse_x = position.x;
                             mouse_y = position.y;
+                        }
+
+
+                        if let Some(handler) = get_state().events.get(&PEvent::PMouseMoved) {
+                            handler(PEventData::from_mouse_event(
+                                PEvent::PMouseMoved,
+                                PMouseButton::NoButton
+                            ));
                         }
                     }
                     _ => ()

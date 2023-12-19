@@ -12,4 +12,10 @@ fn main() {
       .generate()
       .expect("Unable to generate bindings")
       .write_to_file("../ffi-test/bindings.h");
+
+    let profile = env::var("PROFILE").unwrap();
+    
+    if profile == "release" {
+      std::fs::copy("../target/release/libprocessing.a", "../ffi-test/libprocessing.a").expect("Could not copy static lib");
+    }
 }

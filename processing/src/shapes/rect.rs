@@ -1,5 +1,5 @@
-use crate::{
-    shader::ShaderBuilder,
+use crate::core::{
+    shader::{ShaderBuilder, normalized_vtx},
     state::{get_state, set_state}
 };
 
@@ -12,33 +12,11 @@ pub struct RectUniforms {
     pub height: f32,
 }
 
-macro_rules! vtx {
-    (position: $pos:expr, color: $col:expr) => {
-        crate::shader::Vertex {
-            position: $pos,
-            color: $col
-        }
-    };
-}
-
-// macro to convert vertex position to -1 to 1 coordinates
-macro_rules! normalized_vtx {
-    (position: $pos:expr, color: $col:expr) => {
-        crate::shader::Vertex {
-            position: [
-                $pos[0] / crate::state::get_state().width.expect("Width of window has not been set") as f32 * 2.0 - 1.0,
-                $pos[1] / crate::state::get_state().height.expect("Height of window has not been set") as f32 * 2.0 - 1.0,
-                0.0
-            ],
-            color: $col
-        }
-    };
-}
-
 #[no_mangle]
 pub extern "C" fn rect (x: f32, y: f32, width: f32, height: f32) {
     let state = get_state();
     let device = state.device.as_ref().expect("No device specified");
+
 
 
     let bottom_left = normalized_vtx!(position: [x, y + height, 0.0], color: [1.0, 0.0, 0.0, 1.0]);
@@ -51,7 +29,7 @@ pub extern "C" fn rect (x: f32, y: f32, width: f32, height: f32) {
 
     let shader = ShaderBuilder::new(&device)
         .with_label("Rect")
-        .with_source("processing/src/shaders/rect.wgsl")
+        .with_content(include_str!("../shaders/rect.wgsl"))
         .with_vertex_buffer(vec![bottom_left, bottom_right, top_right, top_left])
         .with_index_buffer(vec![0, 1, 2, 2, 3, 0])
         .build();

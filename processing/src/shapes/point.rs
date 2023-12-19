@@ -1,4 +1,4 @@
-use crate::{
+use crate::core::{
     shader::ShaderBuilder,
     state::get_state
 };

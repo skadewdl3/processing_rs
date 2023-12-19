@@ -11,6 +11,7 @@ crate-type = ["staticlib", "rlib"]
 [dependencies]
 bytemuck = { version = "1.14.0", features = ["derive"] }
 env_logger = "0.10.1"
+hex_color = "3.0.0"
 image = "0.24.7"
 lazy_static = "1.4.0"
 pollster = "0.3.0"

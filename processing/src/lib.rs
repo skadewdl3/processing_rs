@@ -1,6 +1,4 @@
 pub mod core;
-pub mod shader;
-pub mod state;
 pub mod shapes;
 
 // extern "C" fn setup () {

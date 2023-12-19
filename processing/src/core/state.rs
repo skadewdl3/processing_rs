@@ -24,7 +24,8 @@ pub struct State {
     pub fill: Color,
     pub background: Color,
     pub target_fps: u64,
-    pub last_redraw_time: Option<Instant>
+    pub last_redraw_time: Option<Instant>,
+    pub max_fps: u64
 }
 
 lazy_static! {
@@ -33,6 +34,7 @@ lazy_static! {
         fill: Color::from_hex("#000000"),
         background: Color::from_hex("#ffffff"),
         target_fps: 60,
+        max_fps: 60,
         ..Default::default()
     });
 }

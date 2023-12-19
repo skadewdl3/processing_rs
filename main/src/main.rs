@@ -1,13 +1,13 @@
-use processing::*;
+use processing::{*, core::color};
 
 extern "C" fn setup () {
     core::window::create_window(800, 800);
     core::window::background(core::color::Color::from_hex("#ffff00"));
-    core::window::set_frame_rate(20);
+    core::color::fill(color::Color::from_hex("#ff0000"));
 }
 
 static mut X: f32 = 400.0;
-static mut INC: f32 = 1.0;
+static mut INC: f32 = 10.0;
 
 extern "C" fn draw () {
     unsafe {

@@ -1,15 +1,13 @@
 use crate::core::{
-    shader::{ShaderBuilder, normalized_vtx},
+    shader::{ShaderBuilder, normalized_vtx, Uniforms},
     state::{get_state, set_state}
 };
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct RectUniforms {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
+    pub stroke: [f32; 4],
+    pub fill: [f32; 4],
 }
 
 #[no_mangle]
@@ -32,6 +30,10 @@ pub extern "C" fn rect (x: f32, y: f32, width: f32, height: f32) {
         .with_content(include_str!("../shaders/rect.wgsl"))
         .with_vertex_buffer(vec![bottom_left, bottom_right, top_right, top_left])
         .with_index_buffer(vec![0, 1, 2, 2, 3, 0])
+        .with_uniforms(Uniforms::Rect(RectUniforms {
+            stroke: state.stroke.to_array(),
+            fill: state.fill.to_array()
+        }))
         .build();
 
     drop(state);

@@ -8,7 +8,7 @@ use crate::core::{
 use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoopBuilder},
-    window::WindowBuilder
+    window::WindowBuilder, monitor::MonitorHandle
 };
 
 #[no_mangle]
@@ -39,6 +39,7 @@ pub extern "C" fn height () -> u32 {
 
 #[no_mangle]
 pub extern "C" fn set_frame_rate (rate: u64) {
+    if rate > get_state().max_fps { return }
     set_state! {
         target_fps = rate;
     }
@@ -61,6 +62,22 @@ pub async fn start_event_loop () {
         .with_inner_size(winit::dpi::LogicalSize::new(width, height))
         .build(&event_loop)
         .unwrap();
+
+    let x = window.available_monitors();
+    let monitors: Vec<MonitorHandle> = x.collect();
+    if monitors.len() > 0 {
+        let m = monitors.get(0).unwrap();
+
+        match m.refresh_rate_millihertz() {
+            Some(rate) => {
+                set_state! {
+                    max_fps = rate as u64;
+                }
+            },
+            _ => ()
+        }
+    }
+
     
     let size = window.inner_size();
     

@@ -2,7 +2,7 @@ use std::time::{Instant, Duration};
 
 use crate::core::{
     set_state, get_state,
-    color::Color
+    color::Color, event::{PEvent, PEventData, PMouseButton}
 };
 
 use winit::{
@@ -138,9 +138,6 @@ pub async fn start_event_loop () {
             shaders = vec![];
         }
 
-
-        
-        
         get_state().window.as_ref().expect("No window created!").request_redraw();
 
 
@@ -211,15 +208,16 @@ pub async fn start_event_loop () {
         }
 
 
-        let state = get_state();
-        let device = state.device.as_ref().expect("No device specified");
-        let surface = state.surface.as_ref().expect("No surface specified");
+        
         match event {
             Event::WindowEvent {
                 event: WindowEvent::Resized(size),
                 ..
             } => {
                 // Recreate the surface with the new size
+                let state = get_state();
+                let device = state.device.as_ref().expect("No device specified");
+                let surface = state.surface.as_ref().expect("No surface specified");
                 instance.poll_all(true);
                 config.width = size.width;
                 config.height = size.height;
@@ -229,6 +227,35 @@ pub async fn start_event_loop () {
                 event: WindowEvent::CloseRequested,
                 ..
             } => *control_flow = ControlFlow::Exit,
+
+
+            Event::WindowEvent { event, .. } => {
+                match event {
+                    WindowEvent::MouseInput { button, .. } => {
+
+                        let state = get_state();
+                        if let Some(handler) = state.events.get(&PEvent::PMousePressed) {
+                            let data = PEventData {
+                                event_type: PEvent::PMousePressed,
+                                mouse_x: state.mouse_x as f32,
+                                mouse_y: state.mouse_y as f32,
+                                mouse_button: PMouseButton::from(button),
+                            };
+                            handler(data)
+                        }
+                    }
+
+                    WindowEvent::CursorMoved { position, .. } => {
+                        println!("Mouse moved: {:?}, {:?}", position.x, position.y);
+                        set_state! {
+                            mouse_x = position.x;
+                            mouse_y = position.y;
+                        }
+                    }
+                    _ => ()
+                }
+            }
+
             _ => ()
             
         }

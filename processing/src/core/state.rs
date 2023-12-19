@@ -7,6 +7,7 @@ use crate::core::{
 };
 use winit::window::Window;
 use wgpu::{Device, Queue, Surface};
+use std::collections::HashMap;
 
 
 #[derive(Default)]
@@ -24,8 +25,11 @@ pub struct State {
     pub fill: Color,
     pub background: Color,
     pub target_fps: u64,
+    pub max_fps: u64,
     pub last_redraw_time: Option<Instant>,
-    pub max_fps: u64
+    pub events: HashMap<PEvent, PEventCallback>,
+    pub mouse_x: f64,
+    pub mouse_y: f64
 }
 
 lazy_static! {
@@ -51,9 +55,9 @@ macro_rules! set_state {
             crate::core::state::STATE.try_write().expect("Could not write to RwLock").$var$(.$var2)* = $value;
         }
     };
-    ($var:ident$(.$var2:ident)*($value:expr);) => {
+    ($var:ident$(.$var2:ident)*($value:expr$(,$other:expr)*);) => {
         {
-            crate::core::state::STATE.try_write().expect("Could not write to RwLock").$var$(.$var2)*($value);
+            crate::core::state::STATE.try_write().expect("Could not write to RwLock").$var$(.$var2)*($value$(,$other)*);
         }
     };
 
@@ -64,23 +68,25 @@ macro_rules! set_state {
     };
 
     // fn - expr
-    ($var:ident$(.$var2:ident)*($value:expr); $($var3:ident$(.$var4:ident)* = $value2:expr;)*) => {
-        set_state!{ $var$(.$var2)*($value); };
+    ($var:ident$(.$var2:ident)*($value:expr$(,$other:expr)*); $($var3:ident$(.$var4:ident)* = $value2:expr;)*) => {
+        set_state!{ $var$(.$var2)*($value$(,$other)*); };
         set_state!{ $($var3$(.$var4)* = $value2;)* };
     };
 
     // expr - fn
-    ($var:ident$(.$var2:ident)* = $value:expr; $($var3:ident$(.$var4:ident)*($value2:expr);)*) => {
+    ($var:ident$(.$var2:ident)* = $value:expr; $($var3:ident$(.$var4:ident)*($value2:expr$(,$other:expr)*);)*) => {
         set_state!{ $var$(.$var2)* = $value; };
-        set_state!{ $($var3$(.$var4)*($value2);)* };
+        set_state!{ $($var3$(.$var4)*($value2$(,$other)*);)* };
     };  
 
     // fn - fn
-    ($var:ident$(.$var2:ident)*($value:expr); $($var3:ident$(.$var4:ident)*($value2:expr);)*) => {
-        set_state!{ $var$(.$var2)*($value); };
-        set_state!{ $($var3$(.$var4)*($value2);)* };
+    ($var:ident$(.$var2:ident)*($value:expr$(,$other:expr)*); $($var3:ident$(.$var4:ident)*($value2:expr$(,$other2:expr)*);)*) => {
+        set_state!{ $var$(.$var2)*($value$(,$other)*); };
+        set_state!{ $($var3$(.$var4)*($value2$(,$other2)*);)* };
     };  
 }
 
 
 pub(crate) use set_state;
+
+use super::event::{PEvent, PEventCallback};

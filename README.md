@@ -15,6 +15,18 @@ This project uses the following crates:
 - [env_logger](https://crates.io/crates/env_logger): For better logging of errors
 - [pollster](https://crates.io/crates/pollster): For running the winit event loop in a blocking way
 
+# How to run
+1. Clone the repo and compile it using `cargo build --release`.
+2. Copy the libprocessing.a file from `target/release` to your desired folder.
+3. Copy the bindings.h file from `ffi-test` to your desired folder.
+4. Ask your C compiler to link `libprocessing.a` by adding -lprocessing as a flag. Alternatively, look for a example CmakeLists.txt file in the ffi-test folder.
+5. Include the `bindings.h` file in your C executable. Compile and run!
+
+Note: Currently, I've only tested this library on Linux. To work, following libraries are also needed in addition to libprocessing:
+- m (generally comes installed along with gcc)
+- [freetype](https://stackoverflow.com/questions/21216129/install-gd-library-and-freetype-on-linux)
+- [fontconfig](https://installati.one/install-fontconfig-ubuntu-22-04/)
+
 # Planned features
 
  - [ ] Draw basic shapes like triangle, rectangle, circle, etc.

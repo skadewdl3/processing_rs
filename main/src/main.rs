@@ -1,4 +1,8 @@
-use processing::{*, core::color};
+use processing::{*, core::{color, event::PEventData}};
+
+extern "C" fn mouse_pressed_handler (data: PEventData) {
+    println!("Mouse pressed: {:?}, {:?}", data.mouse_x, data.mouse_y);
+}
 
 extern "C" fn setup () {
     core::window::create_window(800, 800);
@@ -21,5 +25,6 @@ extern "C" fn draw () {
 
 fn main() {
     core::p_init(setup, draw);
+    core::p_on(core::event::PEvent::PMousePressed, mouse_pressed_handler);
     core::p_run();
 }

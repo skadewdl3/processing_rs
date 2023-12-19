@@ -71,12 +71,14 @@ pub extern "C" fn color_hex (code: *const c_char) -> Color {
     Color::from_hex(code)
 }
 
+#[no_mangle]
 pub extern "C" fn stroke (color: Color) {
     set_state! {
         stroke = color;
     }
 }
 
+#[no_mangle]
 pub extern "C" fn fill (color: Color) {
     set_state! {
         fill = color;

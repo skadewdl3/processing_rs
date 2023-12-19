@@ -24,6 +24,8 @@ uint32_t width(void);
 
 uint32_t height(void);
 
+void set_frame_rate(uint64_t rate);
+
 void rect(float x, float y, float width, float height);
 
 void point(void);

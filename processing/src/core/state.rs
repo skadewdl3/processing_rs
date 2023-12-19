@@ -1,4 +1,4 @@
-use std::sync::{RwLock, RwLockReadGuard};
+use std::{sync::{RwLock, RwLockReadGuard}, time::Instant};
 use lazy_static::lazy_static;
 use crate::core::{
     Callback,
@@ -22,7 +22,9 @@ pub struct State {
     pub shaders: Vec<Shader>,
     pub stroke: Color,
     pub fill: Color,
-    pub background: Color
+    pub background: Color,
+    pub target_fps: u64,
+    pub last_redraw_time: Option<Instant>
 }
 
 lazy_static! {
@@ -30,6 +32,7 @@ lazy_static! {
         stroke: Color::from_hex("#000000"),
         fill: Color::from_hex("#000000"),
         background: Color::from_hex("#ffffff"),
+        target_fps: 60,
         ..Default::default()
     });
 }

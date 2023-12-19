@@ -1,2 +1,5 @@
 .idea/
 cmake-build-debug/
+libprocessing.a
+cmake-build-debug/
+.idea/
